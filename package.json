@@ -1,0 +1,28 @@
+{
+  "name": "simple-handshake",
+  "version": "0.0.0",
+  "description": "Simple Noise handshake over streams",
+  "main": "index.js",
+  "dependencies": {
+    "duplexify": "^3.6.0",
+    "nanoassert": "^1.1.0",
+    "noise-protocol": "^0.1.1"
+  },
+  "devDependencies": {
+    "tape": "^4.8.0"
+  },
+  "scripts": {
+    "test": "tape test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emilbayes/simple-handshake.git"
+  },
+  "keywords": [],
+  "author": "Emil Bay <github@tixz.dk>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/emilbayes/simple-handshake/issues"
+  },
+  "homepage": "https://github.com/emilbayes/simple-handshake#readme"
+}
