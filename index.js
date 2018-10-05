@@ -82,7 +82,7 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
 
     noise.destroy(state)
 
-    onhandshake(err, transportStream)
+    onhandshake(err, transportStream, split)
   }
 }
 
