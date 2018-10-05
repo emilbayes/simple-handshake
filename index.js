@@ -45,7 +45,7 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
     assert(split == null, 'split should be null')
 
     if (waiting === true) {
-      assert(data.byteLength <= 65535)
+      assert(data.byteLength <= rx.byteLength)
       try {
         split = noise.readMessage(state, data, rx)
       } catch (ex) {
@@ -55,7 +55,7 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
       // readable.write(rx.subarray(0, noise.readMessage.bytes))
       waiting = false
 
-      if (split) return onfinish()
+      if (split != null) return onfinish()
     }
 
     if (waiting === false) {
@@ -68,7 +68,7 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
       waiting = true
       transportStream.write(tx.subarray(0, noise.writeMessage.bytes))
 
-      if (split) return onfinish()
+      if (split != null) return onfinish()
     }
 
     next()
