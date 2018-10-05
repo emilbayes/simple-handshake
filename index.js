@@ -1,6 +1,6 @@
 var noise = require('noise-protocol')
 var assert = require('nanoassert')
-
+var each = require('stream-each')
 var EMPTY = Buffer.alloc(0)
 
 // transportStream should be duplex stream
@@ -23,12 +23,12 @@ module.exports = function handshakeStream (transportStream, isInitiator, onhands
   var tx = Buffer.alloc(65535)
   var rx = Buffer.alloc(65535)
 
-  // If not waiting, kick at next tick to start sending handshake
-  if (waiting === false) process.nextTick(tick)
+  // If not waiting, kick to start sending handshake
+  if (waiting === false) tick(null, function () {})
   // Read data in discrete chunks
-  transportStream.on('data', tick)
+  each(transportStream, tick)
 
-  function tick (data) {
+  function tick (data, next) {
     assert(finished === false, 'Should not call tick if finished')
     assert(data == null || waiting === true, 'Wrong state')
     assert(split == null, 'split should be null')
@@ -54,8 +54,8 @@ module.exports = function handshakeStream (transportStream, isInitiator, onhands
         return onfinish(ex)
       }
 
-      transportStream.write(tx.subarray(0, noise.writeMessage.bytes))
       waiting = true
+      transportStream.write(tx.subarray(0, noise.writeMessage.bytes))
 
       if (split) return onfinish()
     }
@@ -67,7 +67,6 @@ module.exports = function handshakeStream (transportStream, isInitiator, onhands
     finished = true
     waiting = false
 
-    transportStream.removeListener('data', tick)
     noise.destroy(state)
 
     onhandshake(err, transportStream)

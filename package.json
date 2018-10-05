@@ -7,6 +7,7 @@
     "duplexify": "^3.6.0",
     "nanoassert": "^1.1.0",
     "noise-protocol": "^0.1.1"
+    "stream-each": "^1.2.3"
   },
   "devDependencies": {
     "tape": "^4.8.0"
