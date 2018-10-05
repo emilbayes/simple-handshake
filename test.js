@@ -15,12 +15,19 @@ function spy (label) {
   })
 }
 
-var server = hs(serverConnection, false, function (err, conn) {
+var server = hs(serverConnection, false, {
+  pattern: 'XX',
+  staticKeyPair: hs.keygen()
+}, function (err, conn, split) {
   if (err) throw err
 
   conn.write('Hello client!')
 })
-var client = hs(clientConnection, true, function (err, conn) {
+
+var client = hs(clientConnection, true, {
+  pattern: 'XX',
+  staticKeyPair: hs.keygen()
+}, function (err, conn, split) {
   if (err) throw err
 
   conn.write('Hello server!')

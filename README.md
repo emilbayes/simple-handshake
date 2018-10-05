@@ -10,7 +10,7 @@ var handshake = require('simple-handshake')
 
 ## API
 
-### `handshake(transportStream, isInitiator, cb(err, connectionStream))`
+### `handshake(transportStream, isInitiator, [opts,] cb(err, connectionStream, split))`
 
 Create a new handshake over `transportStream` (which may not be used while doing
 handshaking!), whether the current peer is initiating the connection (ie. is

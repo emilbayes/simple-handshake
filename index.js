@@ -4,14 +4,25 @@ var each = require('stream-each')
 var EMPTY = Buffer.alloc(0)
 
 // transportStream should be duplex stream
-module.exports = function handshakeStream (transportStream, isInitiator, onhandshake, opts) {
+module.exports = handshakeStream
+function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
+  if (typeof opts === 'function') return handshakeStream(transportStream, isInitiator, null, opts)
+
   opts = opts || {}
 
-  var handshakePattern = 'XX'
-  var prolougeBuf = EMPTY
-  if (opts.onpayload == null) opts.onpayload = (_1, _2, cb) => { cb(null, EMPTY) }
+  var pattern = opts.pattern || 'NN'
+  var prolouge = opts.prolouge || EMPTY
 
-  var state = noise.initialize(handshakePattern, isInitiator, prolougeBuf)
+  var state = noise.initialize(
+    pattern,
+    isInitiator,
+    prolouge,
+    opts.staticKeyPair,
+    opts.ephemeralKeyPair,
+    opts.remoteStaticKey,
+    opts.remoteEphemeralKey
+  )
+
   // initiators should send first message, so if initiator, waiting = false
   // while servers should await any message, so if not initiator, waiting = true
   var waiting = isInitiator === false
@@ -72,3 +83,5 @@ module.exports = function handshakeStream (transportStream, isInitiator, onhands
     onhandshake(err, transportStream)
   }
 }
+
+handshakeStream.keygen = noise.keygen
