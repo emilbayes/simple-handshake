@@ -70,6 +70,8 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
 
       if (split) return onfinish()
     }
+
+    next()
   }
 
   function onfinish (err) {
