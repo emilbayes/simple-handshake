@@ -1,5 +1,7 @@
 # `simple-handshake`
 
+[![Build Status](https://travis-ci.org/emilbayes/simple-handshake.svg?branch=master)](https://travis-ci.org/emilbayes/simple-handshake)
+
 > Simple Noise handshake state machine
 
 ## Usage
