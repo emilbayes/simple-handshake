@@ -105,7 +105,8 @@ called between parsing and `cb`.
 
 ### `hs.destroy()`
 
-Destroy internal state
+Destroy internal state in case you need to terminate the handshake before it has
+completed.
 
 ### `SimpleHandshake.keygen()`
 
