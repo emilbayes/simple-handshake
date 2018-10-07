@@ -27,6 +27,10 @@ rtt(client, server, function (err) {
 })
 
 function rtt (from, to, cb) {
+  // waiting === true means waiting to receive data, hence it should be false
+  // if we're ready to send data!
+  if (from.waiting !== false) return cb(new Error('Not ready to send data'))
+
   from.send(null, function (err, buf) {
     if (err) return cb(err)
 
@@ -36,6 +40,7 @@ function rtt (from, to, cb) {
       // Keep going until from is finished
       if (from.finished === true) return cb()
 
+      // recurse until finished
       return rtt(to, from, cb)
     })
   })

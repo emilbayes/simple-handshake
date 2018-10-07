@@ -34,6 +34,10 @@ rtt(client, server, function (err) {
 })
 
 function rtt (from, to, cb) {
+  // waiting === true means waiting to receive data, hence it should be false
+  // if we're ready to send data!
+  if (from.waiting !== false) return cb(new Error('Not ready to send data'))
+
   from.send(null, function (err, buf) {
     if (err) return cb(err)
 
@@ -48,7 +52,6 @@ function rtt (from, to, cb) {
     })
   })
 }
-
 ```
 
 ## API
@@ -76,7 +79,7 @@ Options include:
 
 ### `hs.waiting`
 
-Flag indicating whether `hs.send` should be called.
+Flag indicating whether this instance is waiting for remote data, ie. `hs.recv` should be called next. If `false` `hs.send` should be called next.
 
 ### `hs.finished`
 

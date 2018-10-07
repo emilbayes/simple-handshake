@@ -35,10 +35,10 @@ function SimpleHandshake (isInitiator, opts) {
 
 SimpleHandshake.prototype.recv = function recv (data, cb) {
   var self = this
-  assert(self.finished === false, 'Should not call tick if finished')
+  assert(self.finished === false, 'Should not call recv if finished')
   assert(data != null, 'must have data')
   assert(data.byteLength <= self._rx.byteLength)
-  assert(self.waiting === true, 'Wrong state')
+  assert(self.waiting === true, 'Wrong state, not ready to receive data')
   assert(self.split == null, 'split should be null')
 
   var hasSkBefore = self.state.rs != null
@@ -69,8 +69,8 @@ SimpleHandshake.prototype.recv = function recv (data, cb) {
 }
 
 SimpleHandshake.prototype.send = function send (data, cb) {
-  assert(this.finished === false, 'Should not call tick if finished')
-  assert(this.waiting === false, 'Wrong state')
+  assert(this.finished === false, 'Should not call send if finished')
+  assert(this.waiting === false, 'Wrong state, not ready to send data')
   assert(this.split == null, 'split should be null')
 
   data = data || EMPTY
