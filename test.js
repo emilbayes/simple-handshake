@@ -15,18 +15,32 @@ function spy (label) {
   })
 }
 
+var serverKeys = hs.keygen()
+var clientKeys = hs.keygen()
+
 var server = hs(serverConnection, false, {
   pattern: 'XX',
-  staticKeyPair: hs.keygen()
+  staticKeyPair: serverKeys,
+  onstatickey: function (key, cb) {
+    console.log('client key', key.equals(clientKeys.publicKey))
+
+    setTimeout(cb, 1000)
+  }
 }, function (err, conn, split) {
   if (err) throw err
 
   conn.write('Hello client!')
 })
 
+
 var client = hs(clientConnection, true, {
   pattern: 'XX',
-  staticKeyPair: hs.keygen()
+  staticKeyPair: clientKeys,
+  onstatickey: function (key, cb) {
+    console.log('server key', key.equals(serverKeys.publicKey))
+
+    setTimeout(cb, 1000)
+  }
 }, function (err, conn, split) {
   if (err) throw err
 

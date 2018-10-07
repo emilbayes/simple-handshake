@@ -17,6 +17,22 @@ handshaking!), whether the current peer is initiating the connection (ie. is
 a client) and call `cb` on error, or with the `transportStream` once the
 handshake has completed.
 
+Options include:
+
+```js
+{
+  pattern: 'XX', // Send keys over the wire
+  prologue: Buffer.alloc(0),
+  staticKeyPair: {publicKey, secretKey},
+  remoteStaticKey: Buffer,
+
+  ephemeralKeyPair: {publicKey, secretKey},
+  remoteEphemeralKey: Buffer,
+
+  onstatickey(remoteStaticKey, cb)
+}
+```
+
 ## Install
 
 ```sh

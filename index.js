@@ -13,6 +13,8 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
   var pattern = opts.pattern || 'NN'
   var prolouge = opts.prolouge || EMPTY
 
+  var onstatickey = opts.onstatickey || function (_, cb) { cb() }
+
   var state = noise.initialize(
     pattern,
     isInitiator,
@@ -35,43 +37,58 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
   var rx = Buffer.alloc(65535)
 
   // If not waiting, kick to start sending handshake
-  if (waiting === false) tick(null, function () {})
+  if (waiting === false) send(function (err) { if (err) onfinish(err) })
   // Read data in discrete chunks
-  each(transportStream, tick)
+  each(transportStream, recv)
 
-  function tick (data, next) {
+  function recv (data, cb) {
     assert(finished === false, 'Should not call tick if finished')
-    assert(data == null || waiting === true, 'Wrong state')
+    assert(data != null, 'must have data')
+    assert(data.byteLength <= rx.byteLength)
+    assert(waiting === true, 'Wrong state')
     assert(split == null, 'split should be null')
 
-    if (waiting === true) {
-      assert(data.byteLength <= rx.byteLength)
-      try {
-        split = noise.readMessage(state, data, rx)
-      } catch (ex) {
-        return onfinish(ex)
-      }
-      // Messages received before the handshake has completed
-      // readable.write(rx.subarray(0, noise.readMessage.bytes))
-      waiting = false
+    var hasSkBefore = state.rs != null
+    try {
+      split = noise.readMessage(state, data, rx)
+    } catch (ex) {
+      return onfinish(ex)
+    }
+    // Messages received before the handshake has completed
+    // readable.write(rx.subarray(0, noise.readMessage.bytes))
+    waiting = false
 
-      if (split != null) return onfinish()
+    var hasSkAfter = state.rs != null
+
+    if (hasSkBefore === false && hasSkAfter === true) return onstatickey(state.rs, ondone)
+
+    return ondone()
+
+    function ondone (err) {
+      if (err) return onfinish(err)
+      if (split) return onfinish()
+
+      send(cb)
+    }
+  }
+
+  function send (cb) {
+    assert(finished === false, 'Should not call tick if finished')
+    assert(waiting === false, 'Wrong state')
+    assert(split == null, 'split should be null')
+
+    try {
+      split = noise.writeMessage(state, EMPTY, tx)
+    } catch (ex) {
+      return onfinish(ex)
     }
 
-    if (waiting === false) {
-      try {
-        split = noise.writeMessage(state, EMPTY, tx)
-      } catch (ex) {
-        return onfinish(ex)
-      }
+    waiting = true
+    transportStream.write(tx.subarray(0, noise.writeMessage.bytes))
 
-      waiting = true
-      transportStream.write(tx.subarray(0, noise.writeMessage.bytes))
+    if (split != null) return onfinish()
 
-      if (split != null) return onfinish()
-    }
-
-    next()
+    return cb()
   }
 
   function onfinish (err) {
