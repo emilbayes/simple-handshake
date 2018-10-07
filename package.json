@@ -1,6 +1,6 @@
 {
   "name": "simple-handshake",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Simple Noise handshake over streams",
   "main": "index.js",
   "dependencies": {
