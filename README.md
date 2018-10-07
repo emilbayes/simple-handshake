@@ -5,7 +5,7 @@
 ## Usage
 
 ```js
-var simpleHandshake = require('.')
+var simpleHandshake = require('simple-handshake')
 
 // Generate static keys. Ideally these are saved as the represent either party's
 // identity
