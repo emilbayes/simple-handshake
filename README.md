@@ -103,6 +103,10 @@ at the next call to `.recv`, so you must copy the payload if you need it for
 longer. If a static key is received and `onstatickey` is set, this function is
 called between parsing and `cb`.
 
+### `hs.destroy()`
+
+Destroy internal state
+
 ### `SimpleHandshake.keygen()`
 
 Generate a key pair for use with the `staticKeyPair` option

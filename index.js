@@ -90,6 +90,10 @@ SimpleHandshake.prototype.send = function send (data, cb) {
   return cb(null, buf)
 }
 
+SimpleHandshake.prototype.destroy = function () {
+  this._finish(null, null, function () {})
+}
+
 SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
   assert(this.finished === false, 'Already finished')
 
@@ -99,6 +103,10 @@ SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
   noise.destroy(this.state)
 
   cb(err, msg, this.split)
+
+  // Should be sodium_memzero?
+  this._rx.fill(0)
+  this._tx.fill(0)
 }
 
 SimpleHandshake.keygen = noise.keygen
