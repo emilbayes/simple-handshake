@@ -1,13 +1,11 @@
 {
   "name": "simple-handshake",
   "version": "0.1.0",
-  "description": "Simple Noise handshake over streams",
+  "description": "Simple Noise handshake state machine",
   "main": "index.js",
   "dependencies": {
-    "duplexify": "^3.6.0",
     "nanoassert": "^1.1.0",
-    "noise-protocol": "^0.2.1",
-    "stream-each": "^1.2.3"
+    "noise-protocol": "^0.2.1"
   },
   "devDependencies": {
     "tape": "^4.8.0"

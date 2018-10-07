@@ -1,24 +1,9 @@
 var hs = require('.')
-var duplexify = require('duplexify')
-var through = require('through2')
-
-var a = spy('<-')
-var b = spy('->')
-
-var serverConnection = duplexify(a, b)
-var clientConnection = duplexify(b, a)
-
-function spy (label) {
-  return through(function (chunk, enc, cb) {
-    console.log(label, chunk.some(b => b > 127) ? chunk.byteLength : chunk.toString())
-    return cb(null, chunk)
-  })
-}
 
 var serverKeys = hs.keygen()
 var clientKeys = hs.keygen()
 
-var server = hs(serverConnection, false, {
+var server = hs(false, {
   pattern: 'XX',
   staticKeyPair: serverKeys,
   onstatickey: function (key, cb) {
@@ -26,14 +11,10 @@ var server = hs(serverConnection, false, {
 
     setTimeout(cb, 1000)
   }
-}, function (err, conn, split) {
-  if (err) return conn.destroy(err)
-
-  conn.write('Hello client!')
 })
 
 
-var client = hs(clientConnection, true, {
+var client = hs(true, {
   pattern: 'XX',
   staticKeyPair: clientKeys,
   onstatickey: function (key, cb) {
@@ -41,8 +22,29 @@ var client = hs(clientConnection, true, {
 
     setTimeout(cb, 1000)
   }
-}, function (err, conn, split) {
-  if (err) return conn.destroy(err)
+})
 
-  conn.write('Hello server!')
+client.send(Buffer.from('Hello world'), function (err, buf1) {
+  if (err) throw err
+  server.recv(buf1, function (err, msg1) {
+    if (err) throw err
+
+    server.send(null, function (err, buf2) {
+      if (err) throw err
+
+      client.recv(buf2, function (err, msg2) {
+        if (err) throw err
+
+        client.send(null, function (err, buf3) {
+          if (err) throw err
+
+          server.recv(buf3, function (err, msg3) {
+            if (err) throw err
+
+            console.log(client, server)
+          })
+        })
+      })
+    })
+  })
 })

@@ -1,21 +1,17 @@
 var noise = require('noise-protocol')
 var assert = require('nanoassert')
-var each = require('stream-each')
 var EMPTY = Buffer.alloc(0)
 
-// transportStream should be duplex stream
-module.exports = handshakeStream
-function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
-  if (typeof opts === 'function') return handshakeStream(transportStream, isInitiator, null, opts)
-
+function SimpleHandshake (isInitiator, opts) {
+  if (!(this instanceof SimpleHandshake)) return new SimpleHandshake(isInitiator, opts)
   opts = opts || {}
 
   var pattern = opts.pattern || 'NN'
   var prolouge = opts.prolouge || EMPTY
 
-  var onstatickey = opts.onstatickey || function (_, cb) { cb() }
+  this.onstatickey = opts.onstatickey || function (_, cb) { cb() }
 
-  var state = noise.initialize(
+  this.state = noise.initialize(
     pattern,
     isInitiator,
     prolouge,
@@ -27,80 +23,84 @@ function handshakeStream (transportStream, isInitiator, opts, onhandshake) {
 
   // initiators should send first message, so if initiator, waiting = false
   // while servers should await any message, so if not initiator, waiting = true
-  var waiting = isInitiator === false
-  var finished = false
+  this.waiting = isInitiator === false
+  this.finished = false
   // Will hold the "split" for transport encryption after handshake
-  var split = null
+  this.split = null
 
   // ~64KiB is the max noise message length
-  var tx = Buffer.alloc(65535)
-  var rx = Buffer.alloc(65535)
+  this._tx = Buffer.alloc(65535)
+  this._rx = Buffer.alloc(65535)
+}
 
-  // If not waiting, kick to start sending handshake
-  if (waiting === false) send(function (err) { if (err) onfinish(err) })
-  // Read data in discrete chunks
-  each(transportStream, recv)
+SimpleHandshake.prototype.recv = function recv (data, cb) {
+  var self = this
+  assert(self.finished === false, 'Should not call tick if finished')
+  assert(data != null, 'must have data')
+  assert(data.byteLength <= self._rx.byteLength)
+  assert(self.waiting === true, 'Wrong state')
+  assert(self.split == null, 'split should be null')
 
-  function recv (data, cb) {
-    assert(finished === false, 'Should not call tick if finished')
-    assert(data != null, 'must have data')
-    assert(data.byteLength <= rx.byteLength)
-    assert(waiting === true, 'Wrong state')
-    assert(split == null, 'split should be null')
-
-    var hasSkBefore = state.rs != null
-    try {
-      split = noise.readMessage(state, data, rx)
-    } catch (ex) {
-      return onfinish(ex)
-    }
-    // Messages received before the handshake has completed
-    // readable.write(rx.subarray(0, noise.readMessage.bytes))
-    waiting = false
-
-    var hasSkAfter = state.rs != null
-
-    if (hasSkBefore === false && hasSkAfter === true) return onstatickey(state.rs, ondone)
-
-    return ondone()
-
-    function ondone (err) {
-      if (err) return onfinish(err)
-      if (split) return onfinish()
-
-      send(cb)
-    }
+  var hasSkBefore = self.state.rs != null
+  try {
+    self.split = noise.readMessage(self.state, data, self._rx)
+  } catch (ex) {
+    return self._finish(ex, null, cb)
   }
 
-  function send (cb) {
-    assert(finished === false, 'Should not call tick if finished')
-    assert(waiting === false, 'Wrong state')
-    assert(split == null, 'split should be null')
+  self.waiting = false
 
-    try {
-      split = noise.writeMessage(state, EMPTY, tx)
-    } catch (ex) {
-      return onfinish(ex)
-    }
+  var hasSkAfter = self.state.rs != null
 
-    waiting = true
-    transportStream.write(tx.subarray(0, noise.writeMessage.bytes))
-
-    if (split != null) return onfinish()
-
-    return cb()
+  if (hasSkBefore === false && hasSkAfter === true) {
+    return self.onstatickey(self.state.rs, ondone)
   }
 
-  function onfinish (err) {
-    if (finished) throw new Error('Already finished')
+  return ondone()
 
-    finished = true
-    waiting = false
+  function ondone (err) {
+    if (err) return self._finish(err, null, cb)
 
-    noise.destroy(state)
+    var msg = self._rx.subarray(0, noise.readMessage.bytes)
+    if (self.split) return self._finish(null, msg, cb)
 
-    onhandshake(err, transportStream, split)
+    cb(null, msg)
   }
 }
 
-handshakeStream.keygen = noise.keygen
+SimpleHandshake.prototype.send = function send (data, cb) {
+  assert(this.finished === false, 'Should not call tick if finished')
+  assert(this.waiting === false, 'Wrong state')
+  assert(this.split == null, 'split should be null')
+
+  data = data || EMPTY
+
+  try {
+    this.split = noise.writeMessage(this.state, data, this._tx)
+  } catch (ex) {
+    return this._finish(ex, null, cb)
+  }
+
+  this.waiting = true
+
+  var buf = this._tx.subarray(0, noise.writeMessage.bytes)
+
+  if (this.split != null) return this._finish(null, buf, cb)
+
+  return cb(null, buf)
+}
+
+SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
+  assert(this.finished === false, 'Already finished')
+
+  this.finished = true
+  this.waiting = false
+
+  noise.destroy(this.state)
+
+  cb(err, msg, this.split)
+}
+
+SimpleHandshake.keygen = noise.keygen
+
+module.exports = SimpleHandshake
