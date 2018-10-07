@@ -27,7 +27,7 @@ var server = hs(serverConnection, false, {
     setTimeout(cb, 1000)
   }
 }, function (err, conn, split) {
-  if (err) throw err
+  if (err) return conn.destroy(err)
 
   conn.write('Hello client!')
 })
@@ -42,7 +42,7 @@ var client = hs(clientConnection, true, {
     setTimeout(cb, 1000)
   }
 }, function (err, conn, split) {
-  if (err) throw err
+  if (err) return conn.destroy(err)
 
   conn.write('Hello server!')
 })
