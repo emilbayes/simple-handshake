@@ -1,6 +1,6 @@
 {
   "name": "simple-handshake",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Simple Noise handshake state machine",
   "main": "index.js",
   "dependencies": {
