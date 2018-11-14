@@ -110,5 +110,6 @@ SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
 }
 
 SimpleHandshake.keygen = noise.keygen
+SimpleHandshake.seedKeygen = noise.seedKeygen
 
 module.exports = SimpleHandshake
