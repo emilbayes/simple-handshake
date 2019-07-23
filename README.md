@@ -94,6 +94,11 @@ A Noise split containing a `{rx, tx}` object of Buffers which are
 `32 byte shared secret | 8 byte nonce` (a Noise `CipherState`). `rx` at the
 initiator matches `tx` at the responder.
 
+### `hs.handshakeHash`
+
+Channel binding handshake hash, available after the handshake has completed and
+a split has occurred. See the [Noise Specification for details](https://noiseprotocol.org/noise.html#channel-binding)
+
 ### `hs.send(payload, cb(err, message))`
 
 Encode a message with a `payload` (which if `null` defaults to an empty buffer),

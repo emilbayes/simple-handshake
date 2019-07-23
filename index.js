@@ -1,4 +1,6 @@
 var noise = require('noise-protocol')
+var NoiseSymmetricState = require('noise-protocol/symmetric-state')
+var NoiseHash = require('noise-protocol/hash')
 var assert = require('nanoassert')
 var EMPTY = Buffer.alloc(0)
 
@@ -9,6 +11,7 @@ function SimpleHandshake (isInitiator, opts) {
   var pattern = opts.pattern || 'NN'
   var prolouge = opts.prolouge || EMPTY
 
+  this.handshakeHash = null
   this.onstatickey = opts.onstatickey || function (_, cb) { cb() }
 
   this.state = noise.initialize(
@@ -99,6 +102,11 @@ SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
 
   this.finished = true
   this.waiting = false
+
+  if (this.split) {
+    this.handshakeHash = Buffer.alloc(NoiseHash.HASHLEN)
+    NoiseSymmetricState.getHandshakeHash(this.state.symmetricState, this.handshakeHash)
+  }
 
   noise.destroy(this.state)
 
