@@ -4,21 +4,40 @@ var serverKeys = hs.keygen()
 var clientKeys = hs.keygen()
 
 var server = hs(false, {
-  pattern: 'XX',
-  staticKeyPair: serverKeys,
+  pattern: 'NN',
+  // staticKeyPair: serverKeys,
   onstatickey: function (key, cb) {
     console.log('client key', key.equals(clientKeys.publicKey))
+
+    setTimeout(cb, 1000)
+  },
+  onephemeralkey: function (key, cb) {
+    console.log('server recv ekey', key.toString('hex'))
+
+    setTimeout(cb, 1000)
+  },
+  onhandshake: function (state, cb) {
+    console.log('server state')
 
     setTimeout(cb, 1000)
   }
 })
 
-
 var client = hs(true, {
-  pattern: 'XX',
-  staticKeyPair: clientKeys,
+  pattern: 'NN',
+  // staticKeyPair: clientKeys,
   onstatickey: function (key, cb) {
-    console.log('server key', key.equals(serverKeys.publicKey))
+    console.log('client recv key', key.equals(serverKeys.publicKey))
+
+    setTimeout(cb, 1000)
+  },
+  onephemeralkey: function (key, cb) {
+    console.log('server ekey', key.toString('hex'))
+
+    setTimeout(cb, 1000)
+  },
+  onhandshake: function (state, cb) {
+    console.log('client state')
 
     setTimeout(cb, 1000)
   }
@@ -34,6 +53,8 @@ client.send(Buffer.from('Hello world'), function (err, buf1) {
 
       client.recv(buf2, function (err, msg2) {
         if (err) throw err
+
+        return console.log(client, server)
 
         client.send(null, function (err, buf3) {
           if (err) throw err

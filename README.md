@@ -69,9 +69,17 @@ Options include:
   staticKeyPair: {publicKey, secretKey}, // Local static key pair
   remoteStaticKey: Buffer, // Remote public key for other patterns eg. KK
 
+  // Callback when receiving a ephemeral public key from a remote peer.
+  onephemeralkey(remoteEphemeralKey, cb),
+
   // Callback when receiving a static public key from a remote peer.
   // Can be used to validate the key against certificates, CRL etc.
   onstatickey(remoteStaticKey, cb),
+
+  // Callback when handshaking has finished.
+  // Can be used to access the handshakeHash or other state data, before it is
+  // cleared
+  onhandshake(state, cb),
 
   // Normally not set, but may be if upgrading from another pattern.
   ephemeralKeyPair: {publicKey, secretKey},

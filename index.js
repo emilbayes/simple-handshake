@@ -13,6 +13,8 @@ function SimpleHandshake (isInitiator, opts) {
 
   this.handshakeHash = null
   this.onstatickey = opts.onstatickey || function (_, cb) { cb() }
+  this.onephemeralkey = opts.onephemeralkey || function (_, cb) { cb() }
+  this.onhandshake = opts.onhandshake || function (_, cb) { cb() }
 
   this.state = noise.initialize(
     pattern,
@@ -40,11 +42,12 @@ SimpleHandshake.prototype.recv = function recv (data, cb) {
   var self = this
   assert(self.finished === false, 'Should not call recv if finished')
   assert(data != null, 'must have data')
-  assert(data.byteLength <= self._rx.byteLength)
+  assert(data.byteLength <= self._rx.byteLength, 'too much data received')
   assert(self.waiting === true, 'Wrong state, not ready to receive data')
   assert(self.split == null, 'split should be null')
 
-  var hasSkBefore = self.state.rs != null
+  var hasREBefore = self.state.re != null
+  var hasRSBefore = self.state.rs != null
   try {
     self.split = noise.readMessage(self.state, data, self._rx)
   } catch (ex) {
@@ -53,9 +56,14 @@ SimpleHandshake.prototype.recv = function recv (data, cb) {
 
   self.waiting = false
 
-  var hasSkAfter = self.state.rs != null
+  var hasREAfter = self.state.re != null
+  var hasRSAfter = self.state.rs != null
 
-  if (hasSkBefore === false && hasSkAfter === true) {
+  if (hasREBefore === false && hasREAfter === true) {
+    return self.onephemeralkey(self.state.re, ondone)
+  }
+
+  if (hasRSBefore === false && hasRSAfter === true) {
     return self.onstatickey(self.state.rs, ondone)
   }
 
@@ -99,22 +107,27 @@ SimpleHandshake.prototype.destroy = function () {
 
 SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
   assert(this.finished === false, 'Already finished')
+  const self = this
 
-  this.finished = true
-  this.waiting = false
+  self.finished = true
+  self.waiting = false
 
-  if (this.split) {
-    this.handshakeHash = Buffer.alloc(NoiseHash.HASHLEN)
-    NoiseSymmetricState.getHandshakeHash(this.state.symmetricState, this.handshakeHash)
+  if (self.split) {
+    self.handshakeHash = Buffer.alloc(NoiseHash.HASHLEN)
+    NoiseSymmetricState.getHandshakeHash(self.state.symmetricState, self.handshakeHash)
   }
+  if (err) return ondone(err)
+  self.onhandshake(self.state, ondone)
 
-  noise.destroy(this.state)
+  function ondone (err) {
+    noise.destroy(self.state)
 
-  cb(err, msg, this.split)
+    cb(err, msg, self.split)
 
-  // Should be sodium_memzero?
-  this._rx.fill(0)
-  this._tx.fill(0)
+    // Should be sodium_memzero?
+    self._rx.fill(0)
+    self._tx.fill(0)
+  }
 }
 
 SimpleHandshake.keygen = noise.keygen
