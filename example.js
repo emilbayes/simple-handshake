@@ -8,12 +8,20 @@ var serverKeys = simpleHandshake.keygen()
 // Make a client/server pair. These are also known as initiator/responder
 var client = simpleHandshake(true, {
   pattern: 'XX',
-  staticKeyPair: clientKeys
+  staticKeyPair: clientKeys,
+  onstatickey: (key, ondone) => {
+    console.log('static key', key)
+    ondone(null)
+  }
 })
 
 var server = simpleHandshake(false, {
   pattern: 'XX',
-  staticKeyPair: serverKeys
+  staticKeyPair: serverKeys,
+  onstatickey: (key, ondone) => {
+    console.log('static key', key)
+    ondone(null)
+  }
 })
 
 // Use a simple Round trip function to do the back and forth.

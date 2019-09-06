@@ -59,15 +59,24 @@ SimpleHandshake.prototype.recv = function recv (data, cb) {
   var hasREAfter = self.state.re != null
   var hasRSAfter = self.state.rs != null
 
+  // e and s may come in the same message, so we always have to check static
+  // after ephemeral. Assumption here (which holds for all official Noise handshakes)
+  // is that e always comes before s
   if (hasREBefore === false && hasREAfter === true) {
-    return self.onephemeralkey(self.state.re, ondone)
+    return self.onephemeralkey(self.state.re, checkStatic)
   }
 
-  if (hasRSBefore === false && hasRSAfter === true) {
-    return self.onstatickey(self.state.rs, ondone)
-  }
+  return checkStatic()
 
-  return ondone()
+  function checkStatic (err) {
+    if (err) return ondone(err)
+
+    if (hasRSBefore === false && hasRSAfter === true) {
+      return self.onstatickey(self.state.rs, ondone)
+    }
+
+    return ondone()
+  }
 
   function ondone (err) {
     if (err) return self._finish(err, null, cb)
