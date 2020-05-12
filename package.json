@@ -8,10 +8,12 @@
     "noise-protocol": "^1.0.0"
   },
   "devDependencies": {
+    "standard": "^14.3.4",
     "tape": "^4.8.0"
   },
   "scripts": {
-    "test": "tape test.js"
+    "pretest": "standard",
+    "test": "tape tests/*.js"
   },
   "repository": {
     "type": "git",
