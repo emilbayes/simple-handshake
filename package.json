@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "nanoassert": "^2.0.0",
-    "noise-protocol": "^2.0.0"
+    "noise-protocol": "^3.0.0"
   },
   "devDependencies": {
     "standard": "^14.3.4",
