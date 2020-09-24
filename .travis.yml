@@ -4,6 +4,8 @@ node_js:
 - node
 - lts/*
 - '10'
+cache:
+  npm: false
 jobs:
   include:
   - stage: npm release
