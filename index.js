@@ -9,7 +9,7 @@ function SimpleHandshake (isInitiator, opts) {
   opts = opts || {}
 
   var pattern = opts.pattern || 'NN'
-  var prolouge = opts.prolouge || EMPTY
+  var prologue = opts.prologue || EMPTY
 
   this.handshakeHash = null
   this.onstatickey = opts.onstatickey || function (_, cb) { cb() }
@@ -19,7 +19,7 @@ function SimpleHandshake (isInitiator, opts) {
   this.state = noise.initialize(
     pattern,
     isInitiator,
-    prolouge,
+    prologue,
     opts.staticKeyPair,
     opts.ephemeralKeyPair,
     opts.remoteStaticKey,
