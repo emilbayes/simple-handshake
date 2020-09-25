@@ -111,7 +111,13 @@ SimpleHandshake.prototype.send = function send (data, cb) {
 }
 
 SimpleHandshake.prototype.destroy = function () {
-  this._finish(null, null, function () {})
+  this.finished = true
+  this.waiting = false
+
+  // Should be sodium_memzero?
+  this._rx.fill(0)
+  this._tx.fill(0)
+  noise.destroy(this.state)
 }
 
 SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
@@ -129,13 +135,7 @@ SimpleHandshake.prototype._finish = function _finish (err, msg, cb) {
   self.onhandshake(self.state, ondone)
 
   function ondone (err) {
-    noise.destroy(self.state)
-
     cb(err, msg, self.split)
-
-    // Should be sodium_memzero?
-    self._rx.fill(0)
-    self._tx.fill(0)
   }
 }
 
